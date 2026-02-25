@@ -2,10 +2,12 @@ from flask import Flask, request, jsonify
 from flask_httpauth import HTTPBasicAuth
 from db import db, init_db
 from products import agregar_producto, eliminar_producto, actualizar_producto, ver_inventario
-from sales import registrar_venta
+from sales import Venta  # Importa la clase Venta que creamos
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 auth = HTTPBasicAuth()
+migrate = Migrate(app, db)
 
 # Configuración base de datos (MySQL con SQLAlchemy)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost:3306/inventario'
@@ -84,8 +86,14 @@ def registrar_venta_endpoint():
     cantidad_vendida = data.get('cantidad_vendida')
 
     if producto_id and cantidad_vendida:
-        registrar_venta(producto_id, cantidad_vendida)
-        return jsonify({"mensaje": "Venta registrada exitosamente"})
+        #Crear la venta y actualizar el stock del producto
+        nueva_venta = Venta(producto_id=producto_id, cantidad_vendida=cantidad_vendida)
+                # Guardar la venta en la base de datos
+        db.session.add(nueva_venta)
+        db.session.commit()
+        return jsonify({"mensaje": "Venta registrada exitosamente", "venta": nueva_venta.to_dict()}), 201
+    
+
 
     return jsonify({"error": "Faltan datos necesarios"}), 400
 
