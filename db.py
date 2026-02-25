@@ -1,18 +1,14 @@
-import sqlite3
+from flask_sqlalchemy import SQLAlchemy
 
-def create_db():
-    conn = sqlite3.connect('inventario.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS productos (
-        id INTEGER PRIMARY KEY,
-        nombre TEXT NOT NULL,
-        categoria TEXT NOT NULL,
-        precio REAL NOT NULL,
-        stock INTEGER NOT NULL
-    )
-    ''')
+# Crear instancia global de la base de datos
+db = SQLAlchemy()
 
-    conn.commit()
-    conn.close()
+
+def init_db(app):
+    """
+    Inicializa la base de datos con la app
+    """
+    db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
